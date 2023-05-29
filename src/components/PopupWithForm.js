@@ -4,7 +4,7 @@ function PopupWithForm ({ title, name, children, isOpen, onClose, onSubmit, butt
 	const handleCloseOverlay = useClosePopup(isOpen, onClose);
 
 	return (
-		<div className={`popup popup_type_${name} ${isOpen ? 'popup_opened' : ''}`} onClick={handleCloseOverlay}>
+		<div className={`popup popup_animated popup_type_${name} ${isOpen ? 'popup_opened' : ''}`} onClick={handleCloseOverlay}>
 			<div className="popup__container">
 				<button className="popup__button-close" type="button" onClick={onClose}></button>
 				<h2 className="popup__title">{title}</h2>
