@@ -68,12 +68,16 @@ function App () {
 
 		api.toggleLike(card._id, !isLiked).then((newCard) => {
 			setCards((state) => state.map((c) => c._id === card._id ? newCard : c));
+		}).catch((error) => {
+			console.error(`Error toggling like: ${error}`);
 		});
 	}
 
 	function handleDeleteClick (card) {
 		api.deleteCard(card._id).then(() => {
 			setCards((state) => state.filter((c) => c._id !== card._id));
+		}).catch((error) => {
+			console.error(`Error deleting card: ${error}`);
 		});
 	}
 
@@ -81,6 +85,8 @@ function App () {
 		api.updateProfile(name, about).then((userData) => {
 			setCurrentUser(userData);
 			closeAllPopups();
+		}).catch((error) => {
+			console.error(`Error updating profile: ${error}`);
 		});
 	}
 
@@ -88,6 +94,8 @@ function App () {
 		api.updateAvatar(avatar).then((userData) => {
 			setCurrentUser(userData);
 			closeAllPopups();
+		}).catch((error) => {
+			console.error(`Error updating avatar: ${error}`);
 		});
 	}
 
@@ -95,6 +103,8 @@ function App () {
 		api.addNewCard(title, url).then((newCard) => {
 			setCards([newCard, ...cards]);
 			closeAllPopups();
+		}).catch((error) => {
+			console.error(`Error adding new card: ${error}`);
 		});
 	}
 

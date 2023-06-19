@@ -21,7 +21,7 @@ function Card ({ card, onCardClick, onCardDelete, onCardLike }) {
 
 	return (
 		<div className="element" key={card._id}>
-			<img alt="фото места" className="element__img" src={card.link} onClick={handleClick}/>
+			<img alt={card.name} className="element__img" src={card.link} onClick={handleClick}/>
 			{isOwn && <button onClick={handleDeleteClick} className="element__button-del" type="button"/>}
 			<div className="element__block">
 				<h2 className="element__title">{card.name}</h2>
