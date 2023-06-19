@@ -5,14 +5,15 @@ function ImagePopup ({ card, onClose }) {
 	const handleCloseOverlay = useClosePopup(isOpen, onClose);
 
 	return (
-		<div onClick={handleCloseOverlay} className={`popup popup_animated popup_type_img ${isOpen ? 'popup_opened' : ''}`}>
+		<div onClick={handleCloseOverlay}
+		     className={`popup popup_animated popup_type_img ${isOpen ? 'popup_opened' : ''}`}>
 			<figure className="popup__container popup__container_type_img">
 				<button onClick={onClose} className="popup__button-close" type="button"></button>
-				<img alt={card.title}
+				<img alt={card.name}
 				     className="popup__image"
 				     src={card.link}
 				/>
-				<figcaption className="popup__title popup__title_theme_dark"></figcaption>
+				<figcaption className="popup__title popup__title_theme_dark">{card.name}</figcaption>
 			</figure>
 		</div>
 	);
