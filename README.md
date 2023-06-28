@@ -1,7 +1,7 @@
 # Проект Mesto-React
 Проект Mesto-React - это интерактивная страница, где пользователи могут делиться фотографиями.
 
-[Демо](https://malinaeva.github.io/mesto-react/)
+[Демо](https://malinaeva.github.io/react-mesto-auth/)
 
 ## Стек технологий
 * HTML5
@@ -13,6 +13,8 @@
 * Babel
 
 Проект запущен с использованием [Create React App](https://github.com/facebook/create-react-app).
+
+Реализована регистрация и авторизация с помощью JWT.
 
 ## Досупные команды
 
