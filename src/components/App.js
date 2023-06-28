@@ -1,4 +1,5 @@
 import '../index.css';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import Header from './Header';
 import Main from './Main';
 import Footer from './Footer';
@@ -10,8 +11,16 @@ import CurrentUserContext from '../contexts/CurrentUserContext';
 import EditProfilePopup from './EditProfilePopup';
 import EditAvatarPopup from './EditAvatarPopup';
 import AddPlacePopup from './AddPlacePopup';
+import Login from './Login';
+import Register from './Register';
+import ProtectedRoute from './ProtectedRoute';
+import InfoTooltip from './InfoTooltip';
+import Auth from '../utils/Auth';
+import successImage from '../images/success.svg';
+import failImage from '../images/fail.svg';
 
 function App () {
+	const navigate = useNavigate();
 	const [cards, setCards] = useState([]);
 	const [isAvatarPopupOpen, setIsAvatarPopupOpen] = useState(false);
 	const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
@@ -23,6 +32,16 @@ function App () {
 		name: '',
 		about: '',
 	});
+
+	const [loggedIn, setLoggedIn] = useState(false);
+	const [tooltipText, setTooltipText] = useState('');
+	const [registered, setRegistered] = useState(false);
+	const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+	const [userData, setUserData] = useState({ email: '' });
+
+	useEffect(() => {
+		tockenCheck();
+	}, [navigate]);
 
 	useEffect(() => {
 		api.getInitialCards()
@@ -46,6 +65,7 @@ function App () {
 		setIsPlacePopupOpen(false);
 		setConfirmationPopupOpen(false);
 		setSelectedCard({});
+		setIsTooltipOpen(false);
 	};
 	const handleEditAvatarClick = () => {
 		setIsAvatarPopupOpen(true);
@@ -108,28 +128,133 @@ function App () {
 		});
 	}
 
+	function handleRegister ({ password, email }) {
+		Auth.register({ password, email }).then(() => {
+			setRegistered(true);
+			setTooltipText('Вы успешно зарегистрировались!');
+			setIsTooltipOpen(true);
+			navigate('/sign-in');
+
+		}).catch((error) => {
+			console.error(`Error registering: ${error}`);
+			setTooltipText('Что-то пошло не так! Попробуйте ещё раз.');
+			setIsTooltipOpen(true);
+		});
+	}
+
+	function handleLogin ({ password, email }) {
+		Auth.authorize({ password, email }).then((response) => {
+			localStorage.setItem('jwt', response.token);
+			setLoggedIn(true);
+			setUserData({
+				password: password,
+				email: email
+			});
+			navigate('/');
+		}).catch((error) => {
+			console.error(`Error logging in: ${error}`);
+			setRegistered(false);
+			setTooltipText('Что-то пошло не так! Попробуйте ещё раз.');
+			setIsTooltipOpen(true);
+		});
+	}
+
+	function handleSignOut () {
+		localStorage.removeItem('jwt');
+		setLoggedIn(false);
+		setUserData({
+			password: '',
+			email: ''
+		});
+		navigate('/sign-in');
+	}
+
+	function tockenCheck () {
+		const jwt = localStorage.getItem('jwt');
+		if (jwt) {
+			Auth.getContent(jwt)
+			.then((response) => {
+				setLoggedIn(true);
+				setUserData({
+					email: response.data.email
+				});
+				navigate('/');
+			})
+			.catch(err => console.error(err));
+		}
+	}
+
 	return (
 		<div className="page">
 			<CurrentUserContext.Provider value={currentUser}>
-				<Header/>
-				<Main
-					onEditProfile={handleEditProfileClick}
-					onAddPlace={handleAddPlaceClick}
-					onEditAvatar={handleEditAvatarClick}
-					onCardClick={handleCardClick}
-					onCardLike={handleCardLike}
-					onCardDelete={handleDeleteClick}
-					cards={cards}
-				/>
-				<Footer/>
+				<Routes>
+					<Route path="/" element={
+						<>
+							<ProtectedRoute
+								loggedIn={loggedIn}
+								element={Header}
+								headerText="Выйти"
+								linkTo={'/sign-in'}
+								email={userData.email}
+								onSignOut={handleSignOut}
+							/>
+							<ProtectedRoute
+								loggedIn={loggedIn}
+								element={Main}
+								onEditProfile={handleEditProfileClick}
+								onAddPlace={handleAddPlaceClick}
+								onEditAvatar={handleEditAvatarClick}
+								onCardClick={handleCardClick}
+								onCardLike={handleCardLike}
+								onCardDelete={handleDeleteClick}
+								cards={cards}
+							/>
+							<ProtectedRoute
+								loggedIn={loggedIn}
+								element={Footer}
+							/>
+						</>
+					}/>
+					<Route path="/sign-up"
+					       element={
+						       <>
+							       <Header
+								       headerText={'Вход'}
+								       linkTo={'/sign-in'}
+								       email=""
+							       />
+							       <Register
+								       onRegister={handleRegister}
+							       />
+							       <Footer/>
+						       </>
+					       }
+					/>
 
-				<EditProfilePopup isOpen={isProfilePopupOpen} onClose={closeAllPopups} onUpdateUser={handleUpdateUser}/>
-
-				<AddPlacePopup isOpen={isPlacePopupOpen} onClose={closeAllPopups} onAddPlace={handleAddPlaceSubmit}/>
-
+					<Route path="/sign-in"
+					       element={
+						       <>
+							       <Header
+								       headerText={'Регистрация'}
+								       linkTo={'/sign-up'}
+								       email=""
+							       />
+							       <Login onLogin={handleLogin}/>
+							       <Footer/>
+						       </>
+					       }
+					/>
+					<Route
+						path="*"
+						element={loggedIn ? <Navigate to="/"/> : <Navigate to="/sign-in"/>}
+					/>
+				</Routes>
+				<EditProfilePopup isOpen={isProfilePopupOpen} onClose={closeAllPopups}
+				                  onUpdateUser={handleUpdateUser}/>
+				<AddPlacePopup isOpen={isPlacePopupOpen} onClose={closeAllPopups}
+				               onAddPlace={handleAddPlaceSubmit}/>
 				<EditAvatarPopup isOpen={isAvatarPopupOpen} onClose={closeAllPopups}
 				                 onUpdateAvatar={handleUpdateAvatar}/>
-
 				<PopupWithForm
 					name="submit"
 					title="Вы уверены?"
@@ -138,10 +263,12 @@ function App () {
 					onClose={closeAllPopups}
 					onSubmit={() => console.log('Submit ok')}
 				/>
-
-				<ImagePopup
-					card={selectedCard}
+				<ImagePopup card={selectedCard} onClose={closeAllPopups}/>
+				<InfoTooltip
+					isOpen={isTooltipOpen}
+					title={tooltipText}
 					onClose={closeAllPopups}
+					image={registered ? successImage : failImage}
 				/>
 			</CurrentUserContext.Provider>
 		</div>
